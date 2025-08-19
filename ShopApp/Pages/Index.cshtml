@@ -1,0 +1,182 @@
+﻿@page "{route?}"
+@model IndexModel
+
+@{
+    ViewData["Title"] = "Shops";
+}
+
+@if (Model.Route == "login")
+{
+    <h1>Login</h1>
+    <div class="col-md-3" style="margin-bottom: 30px;">
+        <form method="post" asp-page-handler="Login">
+            <div class="form-group">
+                <input type="text" name="Username" placeholder="Username" class="form-control" style="margin-bottom: 20px;" />
+                <input type="password" name="Password" placeholder="Password" class="form-control" style="margin-bottom: 20px;" />
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Login" class="btn btn-primary" />
+            </div>
+        </form>
+        <p style="color:red">@Model.ErrorMessage</p>
+    </div>
+}
+else if (Model.Route == "admin")
+{
+    <h1>Admin Panel</h1>
+
+    @if (Model.IsLoggedIn)
+    {
+        <h3>Shops</h3>
+        <table class="table" style="margin-bottom: 30px;">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Slug</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Shops)
+                {
+                    <tr>
+                        <td>@item.Name</td>
+                        <td>@item.Slug</td>
+                        <td>
+                            <a href="javascript:void(0);" onclick="toggleRow('editRow-@item.Id')" class="btn btn-secondary">Edit</a>
+                            <form method="post" asp-page-handler="DeleteShop" asp-route-id="@item.Id" style="display:inline;">
+                                <button type="submit" class="btn btn-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr id="editRow-@item.Id" style="display:none;">
+                        <td colspan="3">
+                            <form method="post" asp-page-handler="EditShop">
+                                <input type="hidden" name="Id" value="@item.Id" />
+
+                                <div class="form-group">
+                                    <label>Name</label>
+                                    <input type="text" name="Name" value="@item.Name" class="form-control" />
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Slug</label>
+                                    <input type="text" name="Slug" value="@item.Slug" class="form-control" />
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Description</label>
+                                    <input type="text" name="Description" value="@item.Description" class="form-control" />
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Date Opened</label>
+                                    <input type="date" name="DateOpened"
+                                           value="@(item.DateOpened.HasValue? item.DateOpened.Value.ToString("yyyy-MM-dd") : "")"
+                                           class="form-control" />
+                                </div>
+
+                                <button type="submit" class="btn btn-success">Save</button>
+                                <button type="button" class="btn btn-secondary" onclick="toggleRow('editRow-@item.Id')">Cancel</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+
+                <!-- Add new shop row -->
+                <tr style="margin-top: 10px;">
+                    <td colspan="3">
+                        <a href="javascript:void(0);" onclick="toggleRow('addRow')" class="btn btn-primary">Add Shop</a>
+                    </td>
+                </tr>
+                <tr id="addRow" style="display:none; margin-top: 20px;">
+                    <td colspan="2">
+                        <form method="post" asp-page-handler="AddShop">
+                            <div class="form-group">
+                                <label>Name</label>
+                                <input type="text" name="Name" placeholder="Shop name" class="form-control" />
+                            </div>
+                            <div class="form-group">
+                                <label>Slug</label>
+                                <input type="text" name="Slug" placeholder="Shop slug" class="form-control" />
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <input type="text" name="Description" placeholder="Description" class="form-control" />
+                            </div>
+                            <div class="form-group">
+                                <label>Date Opened</label>
+                                <input type="date" name="DateOpened" class="form-control" />
+                            </div>
+                            <div class="form-group" style="margin-top: 10px;">
+                                <button type="submit" class="btn btn-primary">Add Shop</button>
+                                <button type="button" class="btn btn-secondary" onclick="toggleRow('addRow')">Cancel</button>
+                            </div>
+                        </form>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <form method="post" asp-page-handler="Logout">
+            <div class="form-group">
+                <input type="submit" value="Logout" class="btn btn-primary" />
+            </div>
+        </form>
+    }
+    else
+    {
+        <p><a href="/login">Login first</a></p>
+    }
+}
+else if (Model.Route == "privacy")
+{
+    <h1>Privacy</h1>
+
+    <p>Use this page to detail your site's privacy policy.</p>
+}
+else if (!string.IsNullOrEmpty(Model.Route))
+{
+    @if (Model.ShopDetail != null)
+    {
+        <h1>@Model.ShopDetail.Name<br /><small>Shop</small></h1>
+        <p>@Model.ShopDetail.Description</p>
+        <p>Opened @Model.ShopDetail.DateOpened.ToString()</p>
+    }
+    else
+    {
+        <p>Shop not found.</p>
+    }
+}
+else
+{
+    <h1>Shop List</h1>
+    @if (!Model.Shops.Any())
+    {
+        <p>No shops yet. <a href="/login">Login</a> to add one.</p>
+    }
+    else
+    {
+        @foreach (var shop in Model.Shops)
+        {
+            <div class="card" style="width: 18rem;">
+                <img src="/images/shop.jpg" class="card-img-top" alt="@shop.Name Shop">
+                <div class="card-body">
+                    <h5 class="card-title">@shop.Name</h5>
+                    <a href="/@shop.Slug">Details</a>
+                </div>
+            </div>
+        }
+    }
+}
+
+<script>
+    function toggleRow(rowId) {
+        var row = document.getElementById(rowId);
+        if (row.style.display === "none") {
+            row.style.display = "";
+        } else {
+            row.style.display = "none";
+        }
+    }
+</script>
